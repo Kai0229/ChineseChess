@@ -1,4 +1,6 @@
-const $=s=>document.querySelector(s),E=Xiangqi;let board=E.initial(),turn='r',selected=null,records=[],snapshots=[],mode='ai',flipped=false,ended=false,timer=null,audio=null;const opts={sound:true,effects:true};
+import E from './engine.js';
+import './style.css';
+const $=s=>document.querySelector(s);let board=E.initial(),turn='r',selected=null,records=[],snapshots=[],mode='ai',flipped=false,ended=false,timer=null,audio=null;const opts={sound:true,effects:true};
 const pos=i=>{let x=i%9,y=Math.floor(i/9);if(flipped){x=8-x;y=9-y;}return {x:(x+.5)/9*100,y:(y+.5)/10*100};};
 const xy=(el,i)=>{const p=pos(i);el.style.left=p.x+'%';el.style.top=p.y+'%';};
 let lines='';for(let y=0;y<10;y++)lines+=`<path d="M50 ${y*100+50}H850"/>`;for(let x=0;x<9;x++)lines+=x===0||x===8?`<path d="M${x*100+50} 50V950"/>`:`<path d="M${x*100+50} 50V450 M${x*100+50} 550V950"/>`;lines+='<path d="M350 50L550 250M550 50L350 250M350 750L550 950M550 750L350 950"/><rect x="35" y="35" width="830" height="930"/>';for(const [x,y]of [[1,2],[7,2],[1,7],[7,7],[0,3],[2,3],[4,3],[6,3],[8,3],[0,6],[2,6],[4,6],[6,6],[8,6]])for(const dx of [-1,1])for(const dy of [-1,1])if(x+dx>=0&&x+dx<=8)lines+=`<path d="M${50+x*100+dx*10} ${50+y*100+dy*24}v${-dy*14}h${dx*14}"/>`;$('#grid').innerHTML=lines;

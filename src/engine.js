@@ -1,4 +1,4 @@
-(function(root){
+
 const names={r:{k:'帥',a:'仕',e:'相',h:'馬',r:'車',c:'炮',p:'兵'},b:{k:'將',a:'士',e:'象',h:'馬',r:'車',c:'砲',p:'卒'}};
 function initial(){const b=Array(90).fill(null);const put=(x,y,t,s)=>b[y*9+x]={t,s};for(const s of ['b','r']){const y=s==='b'?0:9;['r','h','e','a','k','a','e','h','r'].forEach((t,x)=>put(x,y,t,s));[1,7].forEach(x=>put(x,s==='b'?2:7,'c',s));[0,2,4,6,8].forEach(x=>put(x,s==='b'?3:6,'p',s));}return b;}
 function pseudo(b,from,to){if(from===to||to<0||to>=90||!b[from])return false;const p=b[from],q=b[to];if(q&&q.s===p.s)return false;const x=from%9,y=Math.floor(from/9),X=to%9,Y=Math.floor(to/9),dx=X-x,dy=Y-y,ax=Math.abs(dx),ay=Math.abs(dy);let n=0;if(dx===0||dy===0){const step=dx===0?Math.sign(dy)*9:Math.sign(dx);for(let i=from+step;i!==to;i+=step)if(b[i])n++;}const palace=X>=3&&X<=5&&(p.s==='r'?Y>=7:Y<=2);switch(p.t){case'r':return (dx===0||dy===0)&&n===0;case'c':return (dx===0||dy===0)&&n===(q?1:0);case'h':return ax===2&&ay===1?!b[y*9+x+Math.sign(dx)]:ax===1&&ay===2?!b[(y+Math.sign(dy))*9+x]:false;case'e':return ax===2&&ay===2&&(p.s==='r'?Y>=5:Y<=4)&&!b[(y+dy/2)*9+x+dx/2];case'a':return ax===1&&ay===1&&palace;case'k':if(q&&q.t==='k'&&dx===0&&n===0)return true;return ax+ay===1&&palace;case'p':return dx===0&&dy===(p.s==='r'?-1:1)||ay===0&&ax===1&&(p.s==='r'?y<=4:y>=5);}}
@@ -8,5 +8,4 @@ function moves(b,s){const out=[];b.forEach((p,f)=>{if(p&&p.s===s)for(let t=0;t<9
 const value={k:100000,r:900,c:450,h:400,e:200,a:200,p:100};
 function evaluate(b){return b.reduce((v,p,i)=>v+(p?(p.s==='b'?1:-1)*(value[p.t]+(p.t==='p'?(p.s==='b'?Math.floor(i/9):9-Math.floor(i/9))*9:0)):0),0);}
 function ai(b,depth){const all=moves(b,'b');let best=-Infinity,chosen=null;for(const m of all){const a=b.slice();a[m.t]=a[m.f];a[m.f]=null;let v=evaluate(a);if(depth>1){const replies=moves(a,'r');if(!replies.length)v=1000000;else{v=Infinity;for(const r of replies){const c=a.slice();c[r.t]=c[r.f];c[r.f]=null;v=Math.min(v,evaluate(c));}}}v+=Math.random()*12;if(v>best){best=v;chosen=m;}}return chosen;}
-const api={names,initial,pseudo,check,legal,moves,ai};root.Xiangqi=api;if(typeof module!=='undefined')module.exports=api;
-})(typeof window!=='undefined'?window:globalThis);
+export default {names,initial,pseudo,check,legal,moves,ai};

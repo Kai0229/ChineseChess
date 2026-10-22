@@ -1,33 +1,52 @@
-# 墨棋 · 中国象棋 MVP
+# 墨棋 · 中国象棋
 
-现代网页象棋，原生 HTML / CSS / JavaScript，无构建依赖。
+使用 **Node.js 24 + Vite 8** 开发、构建，部署至 **Vercel**。
 
-## 本地运行
+## 本地开发
 
-在项目目录执行 `python3 -m http.server 5173 --directory dist`，浏览器打开 http://localhost:5173 。也可以直接打开 dist/index.html（字体加载需要网络，离线回退系统字体）。
+```sh
+npm ci
+npm run dev
+```
 
-## 功能
+访问终端显示的地址（默认 http://localhost:5173）。本机也可双击 `启动墨棋.command`。
 
-- 本地双人与入门 / 标准人机（标准使用两层搜索）
-- 中国象棋走法、蹩马腿、塞象眼、炮架、九宫、过河、将帅照面、自陷将军校验
-- 合法落点、将军提醒、无合法走法判负
-- 吃子粒子 / 冲击波 / 震屏与合成音效，均可关闭
-- 悔棋、翻转棋盘、棋谱、吃子记录，响应式布局
+## 验证与生产构建
 
-## MVP 边界
+```sh
+npm run check
+npm test
+npm run build
+npm run preview
+```
 
-无在线联机、账户、云端存档；刷新重置棋局。暂不实现长将长捉及重复局面裁定。AI 为轻量体验版。
+构建结果位于 `dist/`；该目录由 Vite 生成，不提交到仓库。生产预览默认在 http://localhost:4173。
 
-## 测试
+## Vercel 部署
 
-`node tests/engine.test.cjs`
+从 Vercel 导入 GitHub 仓库 `Kai0229/ChineseChess`，配置如下：
 
-本机也可以双击 `启动墨棋.command`，然后打开浏览器访问上述地址。当前机器无系统 Node 时，启动器会使用 ChatGPT 附带的 Node。
+- Framework Preset：Vite
+- Root Directory：仓库根目录
+- Node.js：24.x
+- Install Command：`npm ci`
+- Build Command：`npm run build`
+- Output Directory：`dist`
 
-已经通过 11 项引擎测试与浏览器实际操作检查：人机落子及回棋、悔棋、切换双人、炮吃马、吃子特效和吃子记录。
+配置已写入 `vercel.json` 和 `package.json`。关联 GitHub 后，默认分支的提交触发生产部署，其他分支和 PR 可生成预览部署。也可通过 Vercel CLI 在根目录执行 `vercel --prod`。
 
-## GitHub Pages 部署
+GitHub Actions 负责语法检查、棋规测试和 Vite 构建；站点发布交由 Vercel。
 
-项目已包含 `.github/workflows/deploy-pages.yml`。在 GitHub 仓库的 Settings → Pages 中，将 Source 设置为 GitHub Actions。推送到仓库默认分支后，工作流会运行棋规测试，然后将 `dist/` 部署至 GitHub Pages。也支持在 Actions 页面手动运行。
+## 源码结构
 
-页面资源使用相对路径，支持 `https://用户名.github.io/仓库名/` 形式的项目地址。
+- `index.html`：网页入口
+- `src/main.js`：界面交互、音效、吃子特效、人机回合
+- `src/engine.js`：象棋规则与轻量 AI，采用 ES Modules
+- `src/style.css`：响应式现代中式界面
+- `tests/engine.test.js`：11 项棋规及 AI 验证
+
+## 功能与 MVP 边界
+
+支持本地双人、两档人机、合法落点、将军提示、无合法走法判负、悔棋、翻转棋盘、棋谱、吃子记录和可关闭的动态特效及音效。
+
+当前为浏览器本地对弈；Node.js 用于开发和构建。暂不包含在线联机、账户和云端存档；刷新会重置棋局，暂不裁定长将、长捉和重复局面。

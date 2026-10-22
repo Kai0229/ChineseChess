@@ -5,3 +5,5 @@ node_modules/
 !.env.example
 .openai/
 *.log
+dist/
+.vercel/

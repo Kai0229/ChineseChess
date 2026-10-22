@@ -1,0 +1,20 @@
+{
+  "name": "moqi-chinese-chess",
+  "version": "0.2.0",
+  "private": true,
+  "type": "module",
+  "description": "墨棋：中国象棋网页游戏，使用 Node.js 与 Vite 构建。",
+  "engines": {
+    "node": "24.x"
+  },
+  "scripts": {
+    "dev": "vite --host 127.0.0.1",
+    "build": "vite build",
+    "preview": "vite preview --host 127.0.0.1",
+    "test": "node tests/engine.test.js",
+    "check": "node --check src/main.js && node --check src/engine.js"
+  },
+  "devDependencies": {
+    "vite": "8.3.5"
+  }
+}

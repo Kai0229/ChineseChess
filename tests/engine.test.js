@@ -1,5 +1,5 @@
-const assert=require('node:assert/strict');
-const E=require('../dist/engine.js');
+import assert from 'node:assert/strict';
+import E from '../src/engine.js';
 let count=0;function test(name,fn){fn();count++;console.log('✓ '+name);}
 const at=(x,y)=>y*9+x;
 function setup(items){const b=Array(90).fill(null);for(const [x,y,t,s] of items)b[at(x,y)]={t,s};return b;}
