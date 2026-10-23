@@ -11,8 +11,8 @@
     "dev": "vite --host 127.0.0.1",
     "build": "vite build",
     "preview": "vite preview --host 127.0.0.1",
-    "test": "node tests/engine.test.js",
-    "check": "node --check src/main.js && node --check src/engine.js"
+    "test": "node tests/engine.test.js && node tests/search.test.js",
+    "check": "node --check src/main.js && node --check src/engine.js && node --check src/search.js && node --check src/ai.worker.js"
   },
   "devDependencies": {
     "vite": "8.3.5"

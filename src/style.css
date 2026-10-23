@@ -78,3 +78,81 @@ button:disabled{cursor:default;opacity:.4}
 #fx{overflow:hidden;border-radius:4px}
 .player-tag{white-space:nowrap;flex-shrink:0}
 @media(min-width:600px) and (max-width:900px) and (max-height:500px) and (orientation:landscape){.top-player .player-tag{display:none}}
+.difficulty-note{font-size:10px;color:var(--muted);line-height:1.7;margin:9px 0 0}
+@media(max-width:900px){.difficulty-note{font-size:12px;margin-top:10px}}
+
+/* Gilded lacquer frame, aged gold playing surface, and an ink landscape river. */
+.board-wrap{
+  position:relative;
+  border-color:#f0d393;
+  background:linear-gradient(125deg,#775523 0%,#f8df99 12%,#b58a42 24%,#f8e9b6 47%,#b38b48 70%,#e9c77e 87%,#735326 100%);
+  box-shadow:0 16px 42px #0005,0 0 25px #d7ad4c14,inset 0 0 0 3px #63451f,inset 0 0 0 5px #e5c178,inset 0 0 0 8px #9e7439;
+}
+.board-wrap::before{content:'';position:absolute;inset:9px;pointer-events:none;border:1px solid #f6dc9b80;border-radius:3px}
+.board{
+  background-color:#cfb67c;
+  background-image:radial-gradient(ellipse at 28% 18%,#fff0bf80,transparent 55%),radial-gradient(ellipse at 82% 85%,#966c2d33,transparent 60%),repeating-linear-gradient(3deg,#ffefbd10 0,#ffefbd10 1px,transparent 1px,transparent 5px),linear-gradient(110deg,#c6a76b,#e1ca92 45%,#c5a768);
+}
+.board>#grid{z-index:1;stroke:#806230;filter:drop-shadow(0 1px 0 #f9e8ad88);pointer-events:none}
+.piece{background:radial-gradient(circle at 32% 20%,#fff2ce,#e6cd95 65%,#c8a15b);border-color:#a87c37;box-shadow:0 3px 0 #937038,0 5px 6px #493b3d55,inset 0 0 0 3px #f3dfac,inset 0 0 0 4px #b7924c}
+.piece.last{background:radial-gradient(circle at 32% 20%,#fff5c7,#ddbd69 70%,#ba903d)}
+.river-scene{position:absolute;left:5.5556%;right:5.5556%;top:45%;height:10%;overflow:hidden;pointer-events:none;z-index:0;contain:paint;background:#627966}
+.river-scene::before,.river-scene::after{content:'';position:absolute;left:0;right:0;height:1px;background:linear-gradient(90deg,#a87b35,#f9e6a7,#a87b35);z-index:1}
+.river-scene::before{top:0}.river-scene::after{bottom:0}
+.river-scene svg{position:absolute;inset:0;width:100%;height:100%;stroke:none;fill:none;filter:none}
+.river{z-index:2;color:#fff0bf;text-shadow:0 1px 2px #233b2b,0 0 9px #30432b88;font-weight:600}
+.river span{padding:0 5px;position:relative}
+.river-mountains{transform-box:fill-box;transform-origin:center;animation:mountain-drift 22s ease-in-out infinite alternate}
+.river-mountains.near{animation-duration:17s;animation-direction:alternate-reverse}
+.river-current{animation:river-flow 15s linear infinite}.current-two{animation-duration:20s;animation-direction:reverse}.current-three{animation-duration:25s}
+.river-mist{animation:river-breath 11s ease-in-out infinite alternate}
+.river-glints{animation:gold-glimmer 5s ease-in-out infinite alternate}
+@keyframes river-flow{from{transform:translateX(0)}to{transform:translateX(220px)}}
+@keyframes mountain-drift{from{transform:translateX(-8px)}to{transform:translateX(8px)}}
+@keyframes river-breath{from{opacity:.25;transform:translateX(-25px)}to{opacity:.65;transform:translateX(25px)}}
+@keyframes gold-glimmer{0%{opacity:.15}60%{opacity:.8}100%{opacity:.3}}
+@media(max-width:900px){
+ .board-wrap{box-shadow:0 10px 28px #0004,inset 0 0 0 2px #63451f,inset 0 0 0 4px #e5c178,inset 0 0 0 6px #9e7439}
+ .board-wrap::before{inset:6px}
+ .piece{box-shadow:0 2px 0 #937038,0 3px 4px #493b3d44,inset 0 0 0 2px #f3dfac,inset 0 0 0 3px #b7924c}
+}
+@media(prefers-reduced-motion:reduce){.river-scene *{animation:none!important}}
+html[data-effects=off] .river-scene *{animation-play-state:paused}
+/* Continuous, visibly moving water and parallax scenery; no video downloads. */
+.river-pan{animation:river-landscape 65s linear infinite}.river-pan-near{animation-duration:38s}
+.river-current{animation-duration:7s}.current-two{animation-duration:9s}.current-three{animation-duration:12s}
+.river-ripples{animation:river-ripples 5s linear infinite}
+.river-mist{animation:river-mist-drift 9s ease-in-out infinite alternate}
+.river-glints{animation-duration:2.8s}
+.river-boat{animation:river-boat-journey 24s linear infinite}.boat-bob{animation:boat-bob 2.5s ease-in-out infinite}
+@keyframes river-landscape{from{transform:translateX(0)}to{transform:translateX(-900px)}}
+@keyframes river-ripples{from{stroke-dashoffset:0;transform:translateX(0)}to{stroke-dashoffset:-149;transform:translateX(110px)}}
+@keyframes river-mist-drift{from{opacity:.2;transform:translateX(-140px)}to{opacity:.65;transform:translateX(140px)}}
+@keyframes river-boat-journey{from{transform:translateX(940px)}to{transform:translateX(-40px)}}
+@keyframes boat-bob{0%,100%{transform:translateY(0) rotate(-1deg)}50%{transform:translateY(2px) rotate(1deg)}}
+
+/* Jade cabochons with inset gold calligraphy and a polished gilded bezel. */
+.piece{
+  color:#f4d68b;
+  border:1px solid #71521e;
+  background:radial-gradient(ellipse at 28% 17%,#e6ffe9a3 0%,#a4e6b74d 14%,transparent 38%),radial-gradient(ellipse at 72% 77%,#77bd8b80,transparent 48%),conic-gradient(from 30deg,#194d3c,#43866a 24%,#215d45 46%,#103e32 68%,#4c8e70 86%,#194d3c);
+  box-shadow:0 3px 0 #65451d,0 5px 7px #24302766,inset 0 0 0 2px #f4d68b,inset 0 0 0 3px #92672d,inset 0 0 0 4px #d9bc75,inset 0 5px 8px #d7ffe54d,inset 0 -6px 8px #082c2380;
+  text-shadow:0 1px 0 #73541e,0 -1px 0 #fff1b7,0 2px 3px #071e1680;
+  font-weight:700;
+}
+.piece.red{
+  color:#8b3025;
+  background:radial-gradient(ellipse at 28% 17%,#f5fff0cc 0%,#e4f9d87a 18%,transparent 42%),radial-gradient(ellipse at 73% 78%,#82bc9480,transparent 47%),conic-gradient(from 30deg,#a7ceae,#d5e7bd 24%,#96bf9c 47%,#77a58c 68%,#cbe5bd 86%,#a7ceae);
+  text-shadow:0 -1px 0 #ffe5a3,1px 0 0 #e3bc67,-1px 0 0 #e3bc67,0 1px 0 #e3bc67,0 2px 2px #314b2a55;
+  box-shadow:0 3px 0 #65451d,0 5px 7px #24302766,inset 0 0 0 2px #f4d68b,inset 0 0 0 3px #92672d,inset 0 0 0 4px #dfc37e,inset 0 5px 8px #f5ffdc80,inset 0 -6px 8px #3b765d66;
+}
+.piece.selected{
+  outline:2px solid #fff0b6;outline-offset:2px;
+  box-shadow:0 0 16px #e2bf67aa,0 3px 0 #65451d,inset 0 0 0 2px #ffe9a0,inset 0 0 0 3px #92672d,inset 0 0 0 4px #dfc37e,inset 0 5px 8px #e7ffe766,inset 0 -6px 8px #123d3266;
+}
+.piece.last{outline:2px solid #734b20;outline-offset:2px}
+.piece.last:not(.selected){box-shadow:0 0 9px #ffe5a166,0 3px 0 #65451d,inset 0 0 0 2px #ffe9a0,inset 0 0 0 3px #92672d,inset 0 0 0 4px #dfc37e,inset 0 5px 8px #e7ffe766,inset 0 -6px 8px #123d3266}
+@media(max-width:900px){
+  .piece,.piece.red{box-shadow:0 2px 0 #65451d,0 3px 5px #24302755,inset 0 0 0 1px #f4d68b,inset 0 0 0 2px #92672d,inset 0 0 0 3px #dfc37e,inset 0 4px 6px #dcffe45c,inset 0 -4px 6px #123d3255}
+  .piece.selected{box-shadow:0 0 12px #e2bf67aa,0 2px 0 #65451d,inset 0 0 0 1px #ffe9a0,inset 0 0 0 2px #92672d,inset 0 0 0 3px #dfc37e}
+}

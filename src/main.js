@@ -1,6 +1,37 @@
 import E from './engine.js';
 import './style.css';
 const $=s=>document.querySelector(s);let board=E.initial(),turn='r',selected=null,records=[],snapshots=[],mode='ai',flipped=false,ended=false,timer=null,audio=null;const opts={sound:true,effects:!window.matchMedia('(prefers-reduced-motion: reduce)').matches};
+let aiWorker = null, aiGeneration = 0;
+function cancelAI() { clearTimeout(timer); aiWorker?.terminate(); aiWorker = null; aiGeneration++; }
+function scheduleAI() {
+  cancelAI();
+  const generation = aiGeneration;
+  timer = setTimeout(() => {
+    if (generation !== aiGeneration || mode !== 'ai' || turn !== 'b' || ended) return;
+    try {
+      aiWorker = new Worker(new URL('./ai.worker.js', import.meta.url), { type: 'module' });
+      aiWorker.onmessage = ({ data }) => {
+        if (generation !== aiGeneration || mode !== 'ai' || turn !== 'b' || ended) return;
+        const result = data.move;
+        cancelAI();
+        if (result && E.legal(board, result.f, result.t)) move(result.f, result.t);
+      };
+      aiWorker.onerror = () => {
+        if (generation !== aiGeneration) return;
+        cancelAI();
+        toast('深度计算暂不可用，本步使用标准棋力');
+        const result = E.ai(board, 2);
+        if (result && E.legal(board, result.f, result.t)) move(result.f, result.t);
+      };
+      aiWorker.postMessage({ board, level: Number($('#level').value) });
+    } catch {
+      cancelAI();
+      toast('此浏览器不支持后台计算，本步使用标准棋力');
+      const result = E.ai(board, 2);
+      if (result) move(result.f, result.t);
+    }
+  }, 250);
+}
 const pos=i=>{let x=i%9,y=Math.floor(i/9);if(flipped){x=8-x;y=9-y;}return {x:(x+.5)/9*100,y:(y+.5)/10*100};};
 const xy=(el,i)=>{const p=pos(i);el.style.left=p.x+'%';el.style.top=p.y+'%';};
 let lines='';for(let y=0;y<10;y++)lines+=`<path d="M50 ${y*100+50}H850"/>`;for(let x=0;x<9;x++)lines+=x===0||x===8?`<path d="M${x*100+50} 50V950"/>`:`<path d="M${x*100+50} 50V450 M${x*100+50} 550V950"/>`;lines+='<path d="M350 50L550 250M550 50L350 250M350 750L550 950M550 750L350 950"/><rect x="35" y="35" width="830" height="930"/>';for(const [x,y]of [[1,2],[7,2],[1,7],[7,7],[0,3],[2,3],[4,3],[6,3],[8,3],[0,6],[2,6],[4,6],[6,6],[8,6]])for(const dx of [-1,1])for(const dy of [-1,1])if(x+dx>=0&&x+dx<=8)lines+=`<path d="M${50+x*100+dx*10} ${50+y*100+dy*24}v${-dy*14}h${dx*14}"/>`;$('#grid').innerHTML=lines;
@@ -8,13 +39,13 @@ function toast(s){$('#toast').textContent=s;$('#toast').classList.add('show');cl
 function sound(capture=false){if(!opts.sound)return;try{audio??=new(window.AudioContext||window.webkitAudioContext)();audio.resume();const o=audio.createOscillator(),g=audio.createGain();o.connect(g);g.connect(audio.destination);o.type=capture?'triangle':'sine';o.frequency.setValueAtTime(capture?190:520,audio.currentTime);o.frequency.exponentialRampToValueAtTime(70,audio.currentTime+.17);g.gain.setValueAtTime(.16,audio.currentTime);g.gain.exponentialRampToValueAtTime(.001,audio.currentTime+.2);o.start();o.stop(audio.currentTime+.22);}catch{}}
 function burst(i){if(!opts.effects)return;const fx=$('#fx'),p=pos(i);fx.innerHTML='';const ring=document.createElement('div');ring.className='burst';xy(ring,i);fx.append(ring);for(let n=0;n<24;n++){const s=document.createElement('div');s.className='spark';xy(s,i);const a=n/24*Math.PI*2,d=35+Math.random()*75;s.style.setProperty('--dx',Math.cos(a)*d+'px');s.style.setProperty('--dy',Math.sin(a)*d+'px');fx.append(s);}const word=document.createElement('div');word.className='capture-word';word.textContent='破';xy(word,i);fx.append(word);$('.board-wrap').classList.remove('shake');void fx.offsetWidth;$('.board-wrap').classList.add('shake');setTimeout(()=>fx.replaceChildren(),850);}
 function render(){const container=$('#pieces');container.innerHTML='';for(let i=0;i<90;i++){const target=document.createElement('button');target.className='square';target.setAttribute('aria-label',`第${Math.floor(i/9)+1}行第${i%9+1}列`);if(selected!==null&&E.legal(board,selected,i)){target.classList.add('legal');if(board[i])target.classList.add('capture');}xy(target,i);target.onclick=()=>click(i);container.append(target);const p=board[i];if(p){const el=document.createElement('button');el.className='piece '+(p.s==='r'?'red':'black')+(selected===i?' selected':'')+(records.at(-1)?.t===i?' last':'');el.textContent=E.names[p.s][p.t];el.setAttribute('aria-label',`${p.s==='r'?'红':'黑'}方${el.textContent}，第${Math.floor(i/9)+1}行第${i%9+1}列`);xy(el,i);el.onclick=()=>click(i);container.append(el);}}
-$('#moveCount').textContent=records.length+' 步';$('#round').textContent=`第 ${String(Math.floor(records.length/2)+1).padStart(2,'0')} 回合`;$('#opponent').textContent=mode==='ai'?'墨棋 · 棋友':'棋友 · 执黑';$('#opponentSub').textContent=mode==='ai'?($('#level').value==='1'?'入门':'标准')+'棋力 / 黑方':'本地双人 / 黑方';$('#selfName').textContent=mode==='ai'?'你 · 执红':'棋友 · 执红';$('#turnLabel').textContent=ended?'对局已结束':turn==='r'?'轮到红方落子':mode==='ai'?'墨棋正在思考…':'轮到黑方落子';$('#status').innerHTML='<i></i>'+(ended?'对局结束':turn==='r'?'红方行棋':mode==='ai'?'正在思考':'黑方行棋');$('.session').firstChild.textContent='';$('.session').childNodes.forEach(n=>{if(n.nodeType===3)n.textContent=ended?' 对局已结束 ':' 对局进行中 ';});$('#undo').disabled=!records.length;
+$('#moveCount').textContent=records.length+' 步';$('#round').textContent=`第 ${String(Math.floor(records.length/2)+1).padStart(2,'0')} 回合`;$('#opponent').textContent=mode==='ai'?'墨棋 · 棋友':'棋友 · 执黑';$('#opponentSub').textContent=mode==='ai'?({1:'入门',2:'标准',3:'最高难度'}[$('#level').value])+'棋力 / 黑方':'本地双人 / 黑方';$('#selfName').textContent=mode==='ai'?'你 · 执红':'棋友 · 执红';$('#turnLabel').textContent=ended?'对局已结束':turn==='r'?'轮到红方落子':mode==='ai'?'墨棋正在思考…':'轮到黑方落子';$('#status').innerHTML='<i></i>'+(ended?'对局结束':turn==='r'?'红方行棋':mode==='ai'?'正在思考':'黑方行棋');$('.session').firstChild.textContent='';$('.session').childNodes.forEach(n=>{if(n.nodeType===3)n.textContent=ended?' 对局已结束 ':' 对局进行中 ';});$('#undo').disabled=!records.length;
 if(records.length){$('#history').innerHTML='';for(let n=0;n<records.length;n+=2){const row=document.createElement('div');row.className='history-row';for(const txt of [String(n/2+1).padStart(2,'0'),records[n].text,records[n+1]?.text||'…']){const span=document.createElement('span');span.textContent=txt;row.append(span);}$('#history').append(row);}$('#history').scrollTop=99999;}else $('#history').innerHTML='<div class="empty"><span>棋</span><p>棋局初始，落子无悔</p><small>你的每一步，将在这里留下印记</small></div>';for(const s of ['r','b'])$('#'+(s==='r'?'red':'black')+'Captured').textContent=records.filter(m=>m.side===s&&m.captured).map(m=>E.names[m.captured.s][m.captured.t]).join(' ')||'—';}
 function click(i){if(ended||mode==='ai'&&turn==='b')return;if(board[i]?.s===turn){selected=selected===i?null:i;render();return;}if(selected!==null&&E.legal(board,selected,i))move(selected,i);else if(selected!==null)toast('此处不可落子，请选择标记的落点');}
 function notation(p,f,t){const nums=['一','二','三','四','五','六','七','八','九'];const file=i=>p.s==='r'?8-i%9:i%9;const y=Math.floor(f/9),Y=Math.floor(t/9);return E.names[p.s][p.t]+nums[file(f)]+(y===Y?'平':(p.s==='r'?Y<y:Y>y)?'进':'退')+nums[y===Y||['h','e','a'].includes(p.t)?file(t):Math.abs(Y-y)-1];}
-function move(f,t){snapshots.push({board:board.slice(),turn,ended});const p=board[f],q=board[t];records.push({f,t,side:turn,captured:q,text:notation(p,f,t)});board[t]=p;board[f]=null;selected=null;turn=turn==='r'?'b':'r';sound(!!q);const available=E.moves(board,turn);if(!available.length){ended=true;toast(`${p.s==='r'?'红':'黑'}方获胜！`);$('#tipText').textContent=`${p.s==='r'?'红':'黑'}方获胜。再开一局，续写新的棋局。`;}else if(E.check(board,turn)){toast('将军！请注意保护将帅');$('#tipText').textContent='当前被将军，请移动将帅、吃掉来子或挡住攻击。';}render();if(q)burst(t);if(!ended&&mode==='ai'&&turn==='b')timer=setTimeout(()=>{const m=E.ai(board,Number($('#level').value));if(m)move(m.f,m.t);},450);}
-function reset(){clearTimeout(timer);board=E.initial();turn='r';records=[];snapshots=[];selected=null;ended=false;$('#tipText').innerHTML='开局先出马，活棋争先手。<br>让每一枚棋子，都找到它的位置。';render();}
-$('#newGame').onclick=()=>{if(records.length&&!ended&&!confirm('开启新对局将清空当前棋局，是否继续？'))return;reset();setMobileView('board');toast('新局已开，红方先行');};document.querySelectorAll('[data-mode]').forEach(b=>b.onclick=()=>{if(mode===b.dataset.mode)return;if(records.length&&!ended&&!confirm('切换模式将开启新棋局，是否继续？'))return;mode=b.dataset.mode;document.querySelectorAll('[data-mode]').forEach(a=>a.classList.toggle('active',a===b));$('#level').disabled=mode==='local';reset();});$('#undo').onclick=()=>{if(!records.length)return;clearTimeout(timer);const count=mode==='ai'&&turn==='r'?Math.min(2,records.length):1;for(let i=0;i<count;i++){const s=snapshots.pop();board=s.board;turn=s.turn;ended=s.ended;records.pop();}selected=null;render();toast('已回退，可重新落子');};$('#flip').onclick=()=>{flipped=!flipped;render();};for(const key of ['sound','effects'])$('#'+key).onclick=()=>{opts[key]=!opts[key];$('#'+key).setAttribute('aria-checked',opts[key]);if(key==='sound'&&opts[key])sound();};$('#demo').onclick=()=>{if(!opts.effects){toast('请先开启动效开关');return;}setMobileView('board');requestAnimationFrame(()=>{burst(49);sound(true);});};$('#rulesBtn').onclick=()=>$('#rules').showModal();$('#closeRules').onclick=()=>$('#rules').close();$('#level').onchange=()=>{render();toast('棋力已调整，下次电脑落子时生效');};render();
+function move(f,t){snapshots.push({board:board.slice(),turn,ended});const p=board[f],q=board[t];records.push({f,t,side:turn,captured:q,text:notation(p,f,t)});board[t]=p;board[f]=null;selected=null;turn=turn==='r'?'b':'r';sound(!!q);const available=E.moves(board,turn);if(!available.length){ended=true;toast(`${p.s==='r'?'红':'黑'}方获胜！`);$('#tipText').textContent=`${p.s==='r'?'红':'黑'}方获胜。再开一局，续写新的棋局。`;}else if(E.check(board,turn)){toast('将军！请注意保护将帅');$('#tipText').textContent='当前被将军，请移动将帅、吃掉来子或挡住攻击。';}render();if(q)burst(t);if(!ended&&mode==='ai'&&turn==='b')scheduleAI();}
+function reset(){cancelAI();board=E.initial();turn='r';records=[];snapshots=[];selected=null;ended=false;$('#tipText').innerHTML='开局先出马，活棋争先手。<br>让每一枚棋子，都找到它的位置。';render();}
+$('#newGame').onclick=()=>{if(records.length&&!ended&&!confirm('开启新对局将清空当前棋局，是否继续？'))return;reset();setMobileView('board');toast('新局已开，红方先行');};document.querySelectorAll('[data-mode]').forEach(b=>b.onclick=()=>{if(mode===b.dataset.mode)return;if(records.length&&!ended&&!confirm('切换模式将开启新棋局，是否继续？'))return;mode=b.dataset.mode;document.querySelectorAll('[data-mode]').forEach(a=>a.classList.toggle('active',a===b));$('#level').disabled=mode==='local';reset();});$('#undo').onclick=()=>{if(!records.length)return;cancelAI();const count=mode==='ai'&&turn==='r'?Math.min(2,records.length):1;for(let i=0;i<count;i++){const s=snapshots.pop();board=s.board;turn=s.turn;ended=s.ended;records.pop();}selected=null;render();toast('已回退，可重新落子');};$('#flip').onclick=()=>{flipped=!flipped;render();};for(const key of ['sound','effects'])$('#'+key).onclick=()=>{opts[key]=!opts[key];$('#'+key).setAttribute('aria-checked',opts[key]);if(key==='effects')document.documentElement.dataset.effects=opts.effects?'on':'off';if(key==='sound'&&opts[key])sound();};$('#demo').onclick=()=>{if(!opts.effects){toast('请先开启动效开关');return;}setMobileView('board');requestAnimationFrame(()=>{burst(49);sound(true);});};$('#rulesBtn').onclick=()=>$('#rules').showModal();$('#closeRules').onclick=()=>$('#rules').close();$('#level').onchange=()=>{updateDifficultyNote();render();if(mode==='ai'&&turn==='b'&&!ended)scheduleAI();toast('棋力已调整');};render();
 
 // Keep the current game mounted while switching between mobile panels.
 function setMobileView(view) {
@@ -28,3 +59,8 @@ function setMobileView(view) {
 document.querySelectorAll('[data-view]').forEach(button => button.addEventListener('click', () => setMobileView(button.dataset.view)));
 document.querySelectorAll('[data-open-settings]').forEach(button => button.addEventListener('click', () => setMobileView('settings')));
 $('#effects').setAttribute('aria-checked', opts.effects);
+
+function updateDifficultyNote() { $('#difficultyNote').textContent = $('#level').value === '3' ? '最高难度会深入思考，每步约 4 秒。' : '选择适合自己的节奏，享受每一次落子。'; }
+updateDifficultyNote();
+
+document.documentElement.dataset.effects=opts.effects?'on':'off';
